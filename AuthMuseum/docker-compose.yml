@@ -1,0 +1,51 @@
+﻿services:
+  db:
+    image: postgres:12.2-alpine
+    environment:
+      TZ: 'America/Sao_Paulo'
+      PGTZ: 'America/Sao_Paulo'
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - museum
+    ports:
+      - "5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U museum" ]
+      interval: 2s
+      timeout: 5s
+      retries: 10 
+  redis:
+    image: redis:5.0.9-alpine
+    environment:
+      TZ: America/Sao_Paulo
+    restart: always
+    networks:
+      - museum
+    ports:
+      - "6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+  authmuseum:
+    image: authmuseum
+    depends_on:
+     db:
+      condition: service_healthy
+     redis:
+      condition: service_healthy
+    env_file:
+       - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    networks:
+      - museum
+networks:
+  museum:
+    driver: bridge
