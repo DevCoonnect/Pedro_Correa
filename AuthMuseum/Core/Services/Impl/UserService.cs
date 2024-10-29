@@ -2,10 +2,8 @@
 using AuthMuseum.Core.Helpers;
 using AuthMuseum.Core.Repository;
 using AuthMuseum.Domain.Entities;
-using AuthMuseum.Domain.Enums;
 using AuthMuseum.Domain.Errors;
 using AuthMuseum.Domain.Requests;
-using FastEnumUtility;
 
 namespace AuthMuseum.Core.Services.Impl;
 
@@ -22,16 +20,10 @@ public class UserService(IUserRepository userRepository, IPermissionRepository p
 
         var password = request.Password.ToSHA256();
 
-        var profile = Profiles.NONE;
-        if (!string.IsNullOrEmpty(request.Profile) && FastEnum.TryParse(request.Profile, out profile))
-        {
-            return new UnprocessableEntityError($"Profile '{request.Profile}' don't exists!");
-        }
-
         var permissions = new List<Permission>();
         if (request.Permissions != null)
         {  
-            var result = await permissionRepository.TryGetPermissionsByIdAsync(request.Permissions);
+            var result = await permissionRepository.TryGetPermissionsByIdAsync(request.Permissions.Select(x => x.ToString()));
 
             if (!result.Success)
             {
@@ -48,7 +40,7 @@ public class UserService(IUserRepository userRepository, IPermissionRepository p
             IndividualPermissions = permissions,
             Name = request.Name,
             Password = password,
-            Profile = profile
+            Profile = request.Profile
         };
         
         await userRepository.AddAsync(user);
