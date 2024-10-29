@@ -1,5 +1,7 @@
 ﻿using AuthMuseum.Core.Helpers;
+using AuthMuseum.Core.Requirements;
 using AuthMuseum.Core.Services;
+using AuthMuseum.Domain.Enums;
 using AuthMuseum.Domain.Requests;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,6 +41,7 @@ public class ArtController(IArtService artService) : ControllerBase
     }
     
     [HttpGet("arts")]
+    [RequirePermissions(Permissions.CAN_RETRIEVE_ARTS)]
     public async Task<IActionResult> ListArtsAsync()
     {
         var arts = await artService.GetArts();
